@@ -1,2 +1,3 @@
 # retroarch
-Retroarch support for Buildroot
+
+Retroarch specific changes needed for building.
