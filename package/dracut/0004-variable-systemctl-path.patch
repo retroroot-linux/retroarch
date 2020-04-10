@@ -1,0 +1,168 @@
+From 4d8bea61d9029a9c221f8ec264a133daf8a15187 Mon Sep 17 00:00:00 2001
+From: Adam Duskett <Aduskett@gmail.com>
+Date: Thu, 9 Apr 2020 13:02:51 -0700
+Subject: [PATCH] variable systemctl path
+
+Signed-off-by: Adam Duskett <Aduskett@gmail.com>
+---
+ configure                                    | 2 ++
+ modules.d/00systemd/module-setup.sh          | 4 ++--
+ modules.d/01systemd-initrd/module-setup.sh   | 2 +-
+ modules.d/02systemd-networkd/module-setup.sh | 2 +-
+ modules.d/06rngd/module-setup.sh             | 2 +-
+ modules.d/90multipath/module-setup.sh        | 2 +-
+ modules.d/90stratis/module-setup.sh          | 2 +-
+ modules.d/95iscsi/module-setup.sh            | 4 ++--
+ modules.d/98dracut-systemd/module-setup.sh   | 2 +-
+ modules.d/99squash/module-setup.sh           | 2 +-
+ 10 files changed, 13 insertions(+), 11 deletions(-)
+
+diff --git a/configure b/configure
+index 3f724ef..71658d7 100755
+--- a/configure
++++ b/configure
+@@ -47,6 +47,7 @@ while (($# > 0)); do
+         --sharedstatedir) read_arg sharedstatedir "$@" || shift;;
+         --infodir) read_arg infodir "$@" || shift;;
+         --systemdsystemunitdir) read_arg systemdsystemunitdir "$@" || shift;;
++        --systemctlpath) read_arg systemctldir "$@" || shift;;
+         --bashcompletiondir) read_arg bashcompletiondir "$@" || shift;;
+         *) echo "Ignoring unknown option '$1'";;
+     esac
+@@ -108,6 +109,7 @@ sysconfdir ?= ${sysconfdir:-${prefix}/etc}
+ sbindir ?= ${sbindir:-${prefix}/sbin}
+ mandir ?= ${mandir:-${prefix}/share/man}
+ enable_documentation ?= ${enable_documentation:-yes}
++systemctlpath ?= ${systemctlpath:-systemctl}
+ bindir ?= ${bindir:-${prefix}/bin}
+ KMOD_CFLAGS ?= $(${PKG_CONFIG} --cflags " libkmod >= 23 ")
+ KMOD_LIBS ?= $(${PKG_CONFIG} --libs " libkmod >= 23 ")
+diff --git a/modules.d/00systemd/module-setup.sh b/modules.d/00systemd/module-setup.sh
+index 5ebdfc3..cb7f31a 100755
+--- a/modules.d/00systemd/module-setup.sh
++++ b/modules.d/00systemd/module-setup.sh
+@@ -241,7 +241,7 @@ install() {
+         systemd-ask-password-console.service \
+         systemd-ask-password-plymouth.service \
+         ; do
+-        systemctl -q --root "$initdir" add-wants "$i" systemd-vconsole-setup.service
++        $systemctlpath -q --root "$initdir" add-wants "$i" systemd-vconsole-setup.service
+     done
+ 
+     mkdir -p "$initdir/etc/systemd"
+@@ -253,5 +253,5 @@ install() {
+         echo "RateLimitBurst=0"
+     } >> "$initdir/etc/systemd/journald.conf"
+ 
+-    systemctl -q --root "$initdir" set-default multi-user.target
++    $systemctlpath -q --root "$initdir" set-default multi-user.target
+ }
+diff --git a/modules.d/01systemd-initrd/module-setup.sh b/modules.d/01systemd-initrd/module-setup.sh
+index c10e6ad..91497fc 100755
+--- a/modules.d/01systemd-initrd/module-setup.sh
++++ b/modules.d/01systemd-initrd/module-setup.sh
+@@ -36,5 +36,5 @@ install() {
+         $systemdsystemunitdir/initrd-udevadm-cleanup-db.service \
+         $systemdsystemunitdir/initrd-parse-etc.service
+ 
+-    systemctl -q --root "$initdir" set-default initrd.target
++    $systemctlpath -q --root "$initdir" set-default initrd.target
+ }
+diff --git a/modules.d/02systemd-networkd/module-setup.sh b/modules.d/02systemd-networkd/module-setup.sh
+index d3e22f5..cd9fc25 100755
+--- a/modules.d/02systemd-networkd/module-setup.sh
++++ b/modules.d/02systemd-networkd/module-setup.sh
+@@ -65,7 +65,7 @@ install() {
+         systemd-networkd.socket
+ #       systemd-timesyncd.service
+     do
+-        systemctl -q --root "$initdir" enable "$i"
++        $systemctlpath -q --root "$initdir" enable "$i"
+     done
+ }
+ 
+diff --git a/modules.d/06rngd/module-setup.sh b/modules.d/06rngd/module-setup.sh
+index 354bd0b..18ad127 100644
+--- a/modules.d/06rngd/module-setup.sh
++++ b/modules.d/06rngd/module-setup.sh
+@@ -34,5 +34,5 @@ install() {
+     inst rngd
+     inst_simple "${moddir}/rngd.service" "${systemdsystemunitdir}/rngd.service"
+ 
+-    systemctl -q --root "$initdir" add-wants sysinit.target rngd.service
++    $systemctlpath -q --root "$initdir" add-wants sysinit.target rngd.service
+ }
+diff --git a/modules.d/90multipath/module-setup.sh b/modules.d/90multipath/module-setup.sh
+index 48a9d09..66f2424 100755
+--- a/modules.d/90multipath/module-setup.sh
++++ b/modules.d/90multipath/module-setup.sh
+@@ -110,7 +110,7 @@ install() {
+ 
+     if dracut_module_included "systemd"; then
+         inst_simple "${moddir}/multipathd.service" "${systemdsystemunitdir}/multipathd.service"
+-        systemctl -q --root "$initdir" enable multipathd.service
++        $systemctlpath -q --root "$initdir" enable multipathd.service
+     else
+         inst_hook pre-trigger 02 "$moddir/multipathd.sh"
+         inst_hook cleanup   02 "$moddir/multipathd-stop.sh"
+diff --git a/modules.d/90stratis/module-setup.sh b/modules.d/90stratis/module-setup.sh
+index e13000b..2911173 100755
+--- a/modules.d/90stratis/module-setup.sh
++++ b/modules.d/90stratis/module-setup.sh
+@@ -24,7 +24,7 @@ install() {
+ 
+     if dracut_module_included "systemd"; then
+         inst_simple "${moddir}/stratisd-init.service" "${systemdsystemunitdir}/stratisd-init.service"
+-        systemctl -q --root "$initdir" enable stratisd-init.service
++        $systemctlpath -q --root "$initdir" enable stratisd-init.service
+     else
+         inst_hook pre-mount 25 "$moddir/stratisd-start.sh"
+         inst_hook cleanup 25 "$moddir/stratisd-stop.sh"
+diff --git a/modules.d/95iscsi/module-setup.sh b/modules.d/95iscsi/module-setup.sh
+index 19a8bdb..f1fe366 100755
+--- a/modules.d/95iscsi/module-setup.sh
++++ b/modules.d/95iscsi/module-setup.sh
+@@ -258,14 +258,14 @@ install() {
+                 iscsid.socket \
+                 iscsiuio.socket \
+             ; do
+-            systemctl -q --root "$initdir" enable "$i"
++            $systemctlpath -q --root "$initdir" enable "$i"
+         done
+         
+         for i in \
+                 iscsid.service \
+                 iscsiuio.service \
+             ; do
+-            systemctl -q --root "$initdir" add-wants basic.target "$i"
++            $systemctlpath -q --root "$initdir" add-wants basic.target "$i"
+         done
+ 
+         # Make sure iscsid is started after dracut-cmdline and ready for the initqueue
+diff --git a/modules.d/98dracut-systemd/module-setup.sh b/modules.d/98dracut-systemd/module-setup.sh
+index 41b008e..d2dbab1 100755
+--- a/modules.d/98dracut-systemd/module-setup.sh
++++ b/modules.d/98dracut-systemd/module-setup.sh
+@@ -54,7 +54,7 @@ install() {
+         dracut-pre-udev.service \
+         ; do
+         inst_simple "$moddir/${i}" "$systemdsystemunitdir/${i}"
+-        systemctl -q --root "$initdir" add-wants initrd.target "$i"
++        $systemctlpath -q --root "$initdir" add-wants initrd.target "$i"
+     done
+ 
+     inst_simple "$moddir/dracut-tmpfiles.conf" "$tmpfilesdir/dracut-tmpfiles.conf"
+diff --git a/modules.d/99squash/module-setup.sh b/modules.d/99squash/module-setup.sh
+index 72fa81f..cd29219 100644
+--- a/modules.d/99squash/module-setup.sh
++++ b/modules.d/99squash/module-setup.sh
+@@ -25,5 +25,5 @@ install() {
+     inst $moddir/init.sh /squash/init.sh
+ 
+     inst "$moddir/squash-mnt-clear.service" "$systemdsystemunitdir/squash-mnt-clear.service"
+-    systemctl -q --root "$initdir" add-wants initrd-switch-root.target squash-mnt-clear.service
++    $systemctlpath -q --root "$initdir" add-wants initrd-switch-root.target squash-mnt-clear.service
+ }
+-- 
+2.25.2
+

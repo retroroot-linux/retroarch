@@ -1,10 +1,14 @@
 menuconfig BR2_PACKAGE_RETROARCH
 	bool "retroarch"
 	help
-	  Janus is an open source, general purpose, WebRTC gateway
-	  designed and developed by Meetecho.
+	  RetroArch is the reference frontend for the libretro API.
+	  Popular examples of implementations for this API includes
+	  video game system emulators and game engines as well as
+	  more generalized 3D programs. These programs are
+	  instantiated as dynamic libraries.
+	  We refer to these as "libretro cores".
 
-	  https://github.com/meetecho/janus-gateway
+	  https://github.com/libretro/RetroArch
 
 if BR2_PACKAGE_RETROARCH
 comment "features"

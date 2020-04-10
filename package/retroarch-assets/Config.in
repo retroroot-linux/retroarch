@@ -2,10 +2,10 @@ config BR2_PACKAGE_RETROARCH_ASSETS
 	bool "retroarch-assets"
 	depends on BR2_PACKAGE_RETROARCH
 	help
-	  Janus is an open source, general purpose, WebRTC gateway
-	  designed and developed by Meetecho.
+	  Assets needed for RetroArch - e.g. menu drivers, etc.
+	  Also contains the official branding.
 
-	  https://github.com/meetecho/janus-gateway
+	  https://github.com/libretro/retroarch-assets
 
 comment "retroarch needs a toolchain w/ dynamic library, threads, wchar"
 	depends on BR2_USE_MMU

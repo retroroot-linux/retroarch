@@ -1,0 +1,7 @@
+menu "Target packages"
+source "$BR2_EXTERNAL_RETROROOT_PATH/retroarch/Config.in"
+source "$BR2_EXTERNAL_RETROROOT_PATH/retroarch-assets/Config.in"
+source "$BR2_EXTERNAL_RETROROOT_PATH/retroroot-initrd/Config.in"
+source "$BR2_EXTERNAL_RETROROOT_PATH/plymouth/Config.in"
+source "$BR2_EXTERNAL_RETROROOT_PATH/dracut/Config.in"
+endmenu

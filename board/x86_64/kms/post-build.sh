@@ -2,6 +2,7 @@
 set -e
 DEVICE_TYPE="buildroot-x86_64"
 ARTIFACT_NAME="1.0"
+KERNEL_VERSION=$(grep 'BR2_LINUX_KERNEL_VERSION=' ${BR2_CONFIG} |awk -F'"' '{print $2}')
 
 function parse_args(){
     local o O opts
@@ -44,8 +45,17 @@ function mender_fixup(){
   fi
 }
 
+function grub_fixup(){
+  mkdir -p ${TARGET_DIR}/boot
+  cp -rf ${BINARIES_DIR}/efi-part/* "${TARGET_DIR}/boot/"
+  cp -rf ${BINARIES_DIR}/bzImage "${TARGET_DIR}/boot/vmlinuz-${KERNEL_VERSION}"
+  cp -f "retroarch/board/x86_64/kms/grub.cfg" "${BINARIES_DIR}/efi-part/EFI/BOOT/grub.cfg"
+  cp -f "retroarch/board/x86_64/kms/grub.cfg" "${TARGET_DIR}/boot/EFI/BOOT/grub.cfg"
+}
+
 function main(){
   parse_args "${@}"
+  grub_fixup
   mender_fixup
   echo "device_type=${DEVICE_TYPE}" > ${TARGET_DIR}/etc/mender/device_type
   echo "artifact_name=${ARTIFACT_NAME}" > ${TARGET_DIR}/etc/mender/artifact_info
